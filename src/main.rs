@@ -8,7 +8,7 @@ async fn main() {
     let future = get_from_mongo();
     match block_on(future) {
         Ok(good) => println!("{:#?}", good),
-        Err(e) => println!("Error: {}", e),
+        Err(e) => eprintln!("Error: {}", e),
     }
 }
 
