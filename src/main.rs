@@ -1,21 +1,28 @@
-use mongodb::Client;
+use futures::executor::block_on;
 use mongodb::bson::{doc, Document};
+use mongodb::error::Error;
+use mongodb::{Client, Cursor};
 
-fn main() {
-    println!("starting ....");
-    x();
-    println!("done");
+#[tokio::main]
+async fn main() {
+    let future = get_from_mongo();
+    match block_on(future) {
+        Ok(good) => println!("{:#?}", good),
+        Err(e) => eprintln!("Error: {}", e),
+    }
 }
 
-async fn x(){
-    println!("calling mongo");
-    let client = Client::with_uri_str("mongodb+srv://user:8WkirTWrRFZ5nnBAKvx9tq725DLLhxy3@javajoecluster.zixasoj.mongodb.net/test").await.unwrap();
-    println!("calling result");
-    let result = client.database("sample_airbnb").collection::<Document>("listingsAndReviews").aggregate([
-        doc! {
-            "$count": "string"
-        }
-    ], None).await.unwrap();
-    println!("{:#?}", result);
-}
+async fn get_from_mongo() -> Result<Cursor<Document>, Error> {
+    let client = Client::with_uri_str("mongodb+srv://user:8WkirTWrRFZ5nnBAKvx9tq725DLLhxy3@javajoecluster.zixasoj.mongodb.net/test").await?;
 
+    client
+        .database("sample_airbnb")
+        .collection::<Document>("listingsAndReviews")
+        .aggregate(
+            [doc! {
+                "$count": "string"
+            }],
+            None,
+        )
+        .await
+}
